@@ -20,10 +20,36 @@ public final class Main extends JavaPlugin implements Listener {
 	public void onEnable() {
 		PluginManager pm = getServer().getPluginManager();
         pm.registerEvents(this, this);
+        loadConfig();
 	}
+	
+	public void loadConfig() {
+		int roomcount = this.getConfig().getInt("roomcount");
+		for (int i = 1; i <= roomcount; i++) {
+			String roomname = this.getConfig().getString("room" + i + ".name");
+			String password = this.getConfig().getString("room" + i + ".password");
+			int maxmembers = this.getConfig().getInt("room" + i + ".maxmembers");
+			
+			createRoom(roomname, password, maxmembers);
+		}
+	}
+	
 	
 	public void onDisable() {
 		// BlaBla
+	}
+	
+	public void createRoom(String name, String password, int maxmembers) {
+		Object[] roomprops = new Object[4];
+		
+		ArrayList<String> members = new ArrayList<String>();
+		
+		roomprops[0] = name;
+		roomprops[1] = password;
+		roomprops[2] = members;
+		roomprops[3] = maxmembers;
+		
+		rooms.add(roomprops);
 	}
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -32,22 +58,21 @@ public final class Main extends JavaPlugin implements Listener {
 			if (sender instanceof Player) {
 				if (sender.hasPermission("simplechatrooms.create")) {
 					
-					if (args.length > 2) {
+					if (args.length > 3) {
 						sender.sendMessage("Zu viele Argumente angegeben.");
 						return false;
 					}
-					else if (args.length < 2) {
+					else if (args.length < 3) {
 						return false;
 					}
 					
-					Object[] roomprops = new Object[3];
-					ArrayList<String> members = new ArrayList<String>();
-					
-					roomprops[0] = args[0];
-					roomprops[1] = args[1];
-					roomprops[2] = members;
-					
-					rooms.add(roomprops);
+					try {
+						createRoom(args[0], args[1], Integer.parseInt(args[2]));
+					}
+					catch (NumberFormatException nfx) {
+						sender.sendMessage("Fehlerhafte Eingabe.");
+						return false;
+					}
 					
 					sender.sendMessage("Raum mit dem Namen: " + ChatColor.GREEN + args[0] + ChatColor.WHITE + " und dem Passwort: " + ChatColor.GREEN + args[1] + ChatColor.WHITE + " hinzugefügt");
 					
@@ -95,9 +120,15 @@ public final class Main extends JavaPlugin implements Listener {
 								Object[] subarray = rooms.get(i);
 								String roomname = (String) subarray[0];
 								String password = (String) subarray[1];
+								int maxmembers = (int) subarray[3];
 								if (args[0].equals(roomname) && args[1].equals(password)) {
 									@SuppressWarnings("unchecked")
 									ArrayList<Player> playerlist = (ArrayList<Player>) subarray[2];
+									
+									if (playerlist.size() == maxmembers && !sender.isOp()) {
+										sender.sendMessage("Raum ist voll");
+										return true;
+									}
 									
 									for (Player p : playerlist) {
 										p.sendMessage("Player " + ChatColor.GREEN + sender.getName() + ChatColor.WHITE + " ist dem Raum beigetreten.");
@@ -133,7 +164,8 @@ public final class Main extends JavaPlugin implements Listener {
 				for (Object[] subarray : rooms) {
 					@SuppressWarnings("unchecked")
 					int membercount = ((ArrayList<Player>) subarray[2]).size();
-					sender.sendMessage("Raumname: " + ChatColor.RED + subarray[0].toString() + ChatColor.WHITE + " (" + ChatColor.GREEN + membercount + ChatColor.WHITE + ")");
+					int maxmembers = (int) subarray[3];
+					sender.sendMessage("Raumname: " + ChatColor.RED + subarray[0].toString() + ChatColor.WHITE + " (" + ChatColor.GREEN + membercount + ChatColor.WHITE + "/" + ChatColor.GREEN + maxmembers + ChatColor.WHITE + ")");
 				}
 				return true;
 			}
@@ -230,10 +262,11 @@ public final class Main extends JavaPlugin implements Listener {
 					if (((String) subarray[0]).equals(roomname)) {
 						@SuppressWarnings("unchecked")
 						int membercount = ((ArrayList<Player>) subarray[2]).size();
+						int maxmembers = (int) subarray[3];
 						@SuppressWarnings("unchecked")
 						ArrayList<Player> playerlist = (ArrayList<Player>) subarray[2];
 						sender.sendMessage(ChatColor.YELLOW + "---------------------------------------");
-						sender.sendMessage("Member im Raum " + ChatColor.RED + roomname + ChatColor.WHITE + " (" + ChatColor.GREEN + membercount + ChatColor.WHITE + ")");
+						sender.sendMessage("Member im Raum " + ChatColor.RED + roomname + ChatColor.WHITE + " (" + ChatColor.GREEN + membercount + ChatColor.WHITE + "/" + ChatColor.GREEN + maxmembers + ChatColor.WHITE + ")");
 						sender.sendMessage(ChatColor.YELLOW + "---------------------------------------");
 						for (Player p : playerlist) {
 							sender.sendMessage(ChatColor.GREEN + p.getName());

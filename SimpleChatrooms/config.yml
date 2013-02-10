@@ -1,0 +1,6 @@
+roomcount: 1
+
+room1:
+  name: Example Room
+  password: example 
+  maxmembers: 12 
