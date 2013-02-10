@@ -1,0 +1,89 @@
+name: SimpleChatrooms
+main: net.stuffyserv.simplechatrooms.Main
+version: 0.1.1
+
+commands:
+   createroom:
+      description: Command to create chatrooms
+      usage: /createroom <roomname> <password(optional)>
+      permission: simplechatrooms.create
+      permission-message: You don't have <permission>
+   deleteroom:
+      description: Command to delete a chatrooms
+      usage: /deleteroom <Raumname>
+      permission: simplechatrooms.delete
+      permission-message: You don't have <permission>
+   joinroom:
+      description: Command to join chatrooms
+      usage: /joinroom <roomname> <password>
+      permission: simplechatrooms.join
+      permission-message: You don't have <permission>
+   leaveroom:
+      description: Command to leave your current chatroom
+      usage: /leaveroom
+      permission: simplechatrooms.join
+      permission-message: You don't have <permission>
+   showrooms:
+      description: Shows the available chatrooms
+      usage: /showrooms
+      permission: simplechatrooms.show
+      permission-message: You don't have <permission>
+   showmembers:
+      description: Shows the members of a chatroom
+      usage: /showmembers <Room (# for your own room)>
+      permission: simplechatrooms.show
+      permission-message: You don't have <permission>
+   kickplayer:
+      description: Kicks a member from a chatroom
+      usage: /kickplayer <Player>
+      permission: simplechatrooms.kick
+      permission-message: You don't have <permission>
+   moveplayer:
+      description: Moves a player to a chatroom
+      usage: /moveplayer <Player> <Room>
+      permission: simplechatrooms.move
+      permission-message: You don't have <permission>
+
+permissions:
+    simplechatrooms.*:
+        description: Gives access to all chatroom commands
+        children:
+            simplechatrooms.create: true
+            simplechatrooms.delete: true
+            simplechatrooms.kick: true
+            simplechatrooms.enter: true
+            simplechatrooms.edit: true
+            simplechatrooms.move: true
+            simplechatrooms.write: true
+            simplechatrooms.join: true
+            simplechatrooms.show: true
+    simplechatrooms.create:
+        description: Creates a new chatroom
+        default: op
+    simplechatrooms.delete:
+        description: Deletes a chatroom
+        default: op
+    simplechatrooms.kick:
+        description: Kicks a player from a chatroom
+        default: op
+    simplechatrooms.enter:
+        description: Gives permission to enter a chatroom
+        default: true
+    simplechatrooms.edit:
+        description: Edit a chatroom
+        default: op
+    simplechatrooms.move:
+        description: Move a player into a chatroom
+        default: op
+    simplechatrooms.write:
+        description: Write in SimpleChatrooms
+        default: true
+    simplechatrooms.join:
+        description: Join in SimpleChatrooms
+        default: true
+    simplechatrooms.show:
+        description: Show a list of the available chatrooms
+        default: true
+    simplechatrooms.move:
+        description: Move player to rooms
+        default: op
