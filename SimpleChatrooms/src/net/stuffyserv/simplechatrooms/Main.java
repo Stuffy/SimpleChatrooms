@@ -20,7 +20,7 @@ public final class Main extends JavaPlugin implements Listener {
 	public void onEnable() {
 		PluginManager pm = getServer().getPluginManager();
         pm.registerEvents(this, this);
-        loadConfig();
+        //loadConfig();
 	}
 	
 	public void loadConfig() {
@@ -204,7 +204,7 @@ public final class Main extends JavaPlugin implements Listener {
 									rooms.set(i, subarray);
 									
 									for (Player p : playerlist) {
-										p.sendMessage("Player " + ChatColor.GREEN + sender.getName() + ChatColor.WHITE + " wurde aus dem Raum bewegt.");
+										p.sendMessage("Player " + ChatColor.GREEN + target.getName() + ChatColor.WHITE + " wurde aus dem Raum bewegt.");
 									}
 									
 									check = true;
@@ -214,7 +214,7 @@ public final class Main extends JavaPlugin implements Listener {
 							if (((String) subarray[0]).equals(roomname)) {
 								
 								for (Player p : playerlist) {
-									p.sendMessage("Player " + ChatColor.GREEN + sender.getName() + ChatColor.WHITE + " wurde in den Raum bewegt.");
+									p.sendMessage("Player " + ChatColor.GREEN + target.getName() + ChatColor.WHITE + " wurde in den Raum bewegt.");
 								}
 								playerlist.add(target);
 								
@@ -224,7 +224,7 @@ public final class Main extends JavaPlugin implements Listener {
 							}
 						}
 						
-						if (check && check2) {
+						if (check && check2 || getRoom(target) == "NONE" && check2) {
 							sender.sendMessage("Player " + ChatColor.GREEN + sender.getName() + ChatColor.WHITE + " wurde in den Raum " + ChatColor.RED + roomname + ChatColor.WHITE + " bewegt.");
 							return true;
 						}
@@ -367,14 +367,14 @@ public final class Main extends JavaPlugin implements Listener {
     		
     		if (p.isOp()) {
     			if (e.getMessage().contains(p.getName())) {
-    				if (!getRoom(p).equals(getRoom(e.getPlayer()))) {
-    					e.setMessage(ChatColor.BLUE + "[" + getRoom(e.getPlayer()) + "]" + ChatColor.WHITE + e.getMessage());
+    				if (!getRoom(p).equals(getRoom(sender))) {
+    					e.setMessage(ChatColor.BLUE + "[" + getRoom(p.getPlayer()) + "]" + ChatColor.WHITE + e.getMessage());
     				}
     			}
     		}
     	}
     	
-    	if (!getRoom(e.getPlayer()).equals("NONE")) {
+    	if (!getRoom(sender).equals("NONE")) {
     		e.setMessage(ChatColor.RED + "[" + getRoom(sender) + "] " + ChatColor.WHITE + e.getMessage());
     	}
     }
