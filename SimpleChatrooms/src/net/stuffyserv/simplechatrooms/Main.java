@@ -334,8 +334,8 @@ public final class Main extends JavaPlugin implements Listener {
 						}
 						
 						if (check && check2 || getRoom(target) == "NONE" && check2) {
-							target.sendMessage("Du wurdest in den Raum" + ChatColor.RED + roomname + ChatColor.WHITE + " bewegt.");
-							sender.sendMessage("Player " + ChatColor.GREEN + sender.getName() + ChatColor.WHITE + " wurde in den Raum " + ChatColor.RED + roomname + ChatColor.WHITE + " bewegt.");
+							target.sendMessage("Du wurdest in den Raum " + ChatColor.RED + roomname + ChatColor.WHITE + " bewegt.");
+							sender.sendMessage("Player " + ChatColor.GREEN + target.getName() + ChatColor.WHITE + " wurde in den Raum " + ChatColor.RED + roomname + ChatColor.WHITE + " bewegt.");
 							return true;
 						}
 						else {
@@ -478,7 +478,7 @@ public final class Main extends JavaPlugin implements Listener {
     		if (p.isOp()) {
     			if (e.getMessage().contains(p.getName())) {
     				if (!getRoom(p).equals(getRoom(sender))) {
-    					e.setMessage(ChatColor.BLUE + "[" + getRoom(p.getPlayer()) + "]" + ChatColor.WHITE + e.getMessage());
+    					p.sendMessage(ChatColor.BLUE + "[" + getRoom(p.getPlayer()) + "]" + ChatColor.WHITE + e.getMessage());
     				}
     			}
     		}
