@@ -316,6 +316,9 @@ public final class Main extends JavaPlugin implements Listener {
 									check = true;
 								}
 							}
+							else {
+								check = true;
+							}
 							
 							if (((String) subarray[0]).equals(roomname)) {
 								
@@ -331,11 +334,12 @@ public final class Main extends JavaPlugin implements Listener {
 						}
 						
 						if (check && check2 || getRoom(target) == "NONE" && check2) {
+							target.sendMessage("Du wurdest in den Raum" + ChatColor.RED + roomname + ChatColor.WHITE + " bewegt.");
 							sender.sendMessage("Player " + ChatColor.GREEN + sender.getName() + ChatColor.WHITE + " wurde in den Raum " + ChatColor.RED + roomname + ChatColor.WHITE + " bewegt.");
 							return true;
 						}
 						else {
-							sender.sendMessage("Move failed");
+							sender.sendMessage("Bewegen fehlgeschlagen.");
 							return false;
 						}
 					}
