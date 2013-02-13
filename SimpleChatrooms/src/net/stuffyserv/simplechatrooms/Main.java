@@ -13,14 +13,92 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 public final class Main extends JavaPlugin implements Listener {
 	
 	ArrayList<Object[]> rooms = new ArrayList<Object[]>();
+	Connection conn;
 	
 	public void onEnable() {
 		PluginManager pm = getServer().getPluginManager();
         pm.registerEvents(this, this);
         //loadConfig();
+        try {
+			createSqLiteDb();
+		} catch (ClassNotFoundException | SQLException e) {
+			// TODO: Add error handling
+		}
+	}
+	
+	public void createSqLiteDb() throws SQLException, ClassNotFoundException {
+	    
+		File f = new File("rooms.db");
+		
+		if (!f.exists()) {
+			Class.forName("org.sqlite.JDBC");
+		    Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
+		    Statement stat = conn.createStatement();
+		    stat.executeUpdate("create table rooms (roomname, password, maxmembers);");
+		}
+		else {
+			Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
+		}
+	}
+	
+	public boolean saveRooms() {
+		try {
+			PreparedStatement prep = conn.prepareStatement("insert into rooms values (?, ?, ?);");
+			
+			for (int i = 0; i < rooms.size(); i++) {
+				Object[] subarray = rooms.get(i);
+				String roomname = (String) subarray[0];
+				String password = (String) subarray[1];
+				int maxmembers = (int) subarray[3];
+				
+				prep.setString(1, roomname);
+				prep.setString(2, password);
+				prep.setInt(3, maxmembers);
+				
+				prep.addBatch();
+			}
+			
+		    conn.setAutoCommit(false);
+		    prep.executeBatch();
+		    conn.setAutoCommit(true);
+		    return true;
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			return false;
+		}
+	}
+	
+	public boolean loadRooms() {
+		try {
+			Statement stat = conn.createStatement();
+			ResultSet rs = stat.executeQuery("select * from rooms;");
+				while (rs.next())
+				{
+					String roomname = rs.getString("roomname");
+					String password = rs.getString("password");
+					int maxmembers = rs.getInt("maxmembers");
+					
+					createRoom(roomname, password, maxmembers);
+					
+				}
+			rs.close();
+			return true;
+		}
+		catch (SQLException e) {
+			return false;
+		}
 	}
 	
 	public void loadConfig() {
@@ -36,7 +114,11 @@ public final class Main extends JavaPlugin implements Listener {
 	
 	
 	public void onDisable() {
-		// BlaBla
+		try {
+			conn.close();
+		} catch (SQLException e) {
+			// TODO: Add error handling
+		}
 	}
 	
 	public void createRoom(String name, String password, int maxmembers) {
@@ -176,6 +258,11 @@ public final class Main extends JavaPlugin implements Listener {
 		}
 		
 		if (cmd.getName().equalsIgnoreCase("moveplayer")) {
+			
+			if (args.length < 1) {
+				return false;
+			}
+			
 			Player target = (Bukkit.getServer().getPlayer(args[0]));
 			boolean check = false;
 			boolean check2 = false;

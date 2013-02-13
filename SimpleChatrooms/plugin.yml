@@ -5,7 +5,7 @@ version: 0.1.1
 commands:
    createroom:
       description: Command to create chatrooms
-      usage: /createroom <roomname> <password(optional)>
+      usage: /createroom <roomname> <password(optional)> <maxmembers>
       permission: simplechatrooms.create
       permission-message: You don't have <permission>
    deleteroom:
