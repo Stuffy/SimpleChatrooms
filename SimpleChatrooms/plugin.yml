@@ -13,6 +13,11 @@ commands:
       usage: /deleteroom <Raumname>
       permission: simplechatrooms.delete
       permission-message: You don't have <permission>
+   saverooms:
+      description: Save all current chatrooms
+      usage: /saverooms
+      permission: simplechatrooms.save
+      permission-message: You don't have <permission>
    joinroom:
       description: Command to join chatrooms
       usage: /joinroom <roomname> <password>
@@ -50,6 +55,7 @@ permissions:
         children:
             simplechatrooms.create: true
             simplechatrooms.delete: true
+            simplechatrooms.save: true
             simplechatrooms.kick: true
             simplechatrooms.enter: true
             simplechatrooms.edit: true
@@ -61,6 +67,9 @@ permissions:
         description: Creates a new chatroom
         default: op
     simplechatrooms.delete:
+        description: Deletes a chatroom
+        default: op
+    simplechatrooms.save:
         description: Deletes a chatroom
         default: op
     simplechatrooms.kick:

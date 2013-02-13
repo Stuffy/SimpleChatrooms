@@ -29,31 +29,56 @@ public final class Main extends JavaPlugin implements Listener {
 	public void onEnable() {
 		PluginManager pm = getServer().getPluginManager();
         pm.registerEvents(this, this);
-        //loadConfig();
-        try {
-			createSqLiteDb();
-		} catch (ClassNotFoundException | SQLException e) {
+		createSqLiteDb();
+		loadRooms();
+	}
+	
+	public void onDisable() {
+		try {
+			if (conn != null) {
+				conn.close();
+			}
+		} catch (SQLException e) {
 			// TODO: Add error handling
 		}
 	}
 	
-	public void createSqLiteDb() throws SQLException, ClassNotFoundException {
-	    
-		File f = new File("rooms.db");
-		
-		if (!f.exists()) {
-			Class.forName("org.sqlite.JDBC");
-		    Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
-		    Statement stat = conn.createStatement();
-		    stat.executeUpdate("create table rooms (roomname, password, maxmembers);");
-		}
-		else {
-			Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
+	public void createSqLiteDb() {
+	    try {
+	    	
+	    	File theDir = new File("plugins/SimpleChatrooms");
+	    	
+	    	if (!theDir.exists()) {
+	    		theDir.mkdir();
+	    	}
+	    	
+			File f = new File("plugins/SimpleChatrooms/simplechatrooms.db");
+			
+			if (!f.exists()) {
+				Class.forName("org.sqlite.JDBC");
+			    conn = DriverManager.getConnection("jdbc:sqlite:plugins/SimpleChatrooms/simplechatrooms.db");
+			    Statement stat = conn.createStatement();
+			    stat.executeUpdate("create table rooms (roomname, password, maxmembers);");
+			}
+			else {
+				conn = DriverManager.getConnection("jdbc:sqlite:plugins/SimpleChatrooms/simplechatrooms.db");
+			}
+	    }
+	    catch (SQLException e) {
+	    	getLogger().info(e.getMessage());
+			// TODO Auto-generated catch block
+	    } catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
 	public boolean saveRooms() {
 		try {
+
+		    Statement stat = conn.createStatement();
+		    stat.executeUpdate("DELETE FROM rooms;");
+			
 			PreparedStatement prep = conn.prepareStatement("insert into rooms values (?, ?, ?);");
 			
 			for (int i = 0; i < rooms.size(); i++) {
@@ -102,23 +127,6 @@ public final class Main extends JavaPlugin implements Listener {
 	}
 	
 	public void loadConfig() {
-		int roomcount = this.getConfig().getInt("roomcount");
-		for (int i = 1; i <= roomcount; i++) {
-			String roomname = this.getConfig().getString("room" + i + ".name");
-			String password = this.getConfig().getString("room" + i + ".password");
-			int maxmembers = this.getConfig().getInt("room" + i + ".maxmembers");
-			
-			createRoom(roomname, password, maxmembers);
-		}
-	}
-	
-	
-	public void onDisable() {
-		try {
-			conn.close();
-		} catch (SQLException e) {
-			// TODO: Add error handling
-		}
 	}
 	
 	public void createRoom(String name, String password, int maxmembers) {
@@ -171,26 +179,37 @@ public final class Main extends JavaPlugin implements Listener {
 			}
 		}
 		
-		if (cmd.getName().equalsIgnoreCase("deleteroom")) {
-			if (sender instanceof Player) {
-				for (int i = 0; i < rooms.size(); i++) {
-					Object[] subarray = rooms.get(i);
-					
-					@SuppressWarnings("unchecked")
-					ArrayList<Player> roommembers = (ArrayList<Player>) subarray[2];
-					
-					if (subarray[0].equals(args[0])) {
-						rooms.remove(i);
-						sender.sendMessage("Raum " + ChatColor.RED + ((String) subarray[0]) + ChatColor.WHITE + " gelöscht.");
-						for (Player p : roommembers) {
-							p.sendMessage("Dein Raum wurde gelöscht!");
-						}
-						return true;
-					}
-				}
-				sender.sendMessage("Raum:" + ChatColor.RED + args[0] + ChatColor.WHITE + " wurde nicht gefunden.");
-				return true;
+		if (cmd.getName().equalsIgnoreCase("saverooms")) {
+			if (rooms.size() == 0) {
+				return false;
 			}
+			saveRooms();
+			sender.sendMessage("Räume gespeichert!");
+			return true;
+		}
+		
+		if (cmd.getName().equalsIgnoreCase("deleteroom")) {
+			
+			if (rooms.size() == 0) {
+				return false;
+			}
+			for (int i = 0; i < rooms.size(); i++) {
+				Object[] subarray = rooms.get(i);
+				
+				@SuppressWarnings("unchecked")
+				ArrayList<Player> roommembers = (ArrayList<Player>) subarray[2];
+				
+				if (subarray[0].equals(args[0])) {
+					rooms.remove(i);
+					sender.sendMessage("Raum " + ChatColor.RED + ((String) subarray[0]) + ChatColor.WHITE + " gelöscht.");
+					for (Player p : roommembers) {
+						p.sendMessage("Dein Raum wurde gelöscht!");
+					}
+					return true;
+				}
+			}
+			sender.sendMessage("Raum:" + ChatColor.RED + args[0] + ChatColor.WHITE + " wurde nicht gefunden.");
+			return true;
 		}
 		
 		if (cmd.getName().equalsIgnoreCase("joinroom")) {
