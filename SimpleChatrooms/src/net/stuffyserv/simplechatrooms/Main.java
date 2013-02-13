@@ -478,7 +478,7 @@ public final class Main extends JavaPlugin implements Listener {
     		if (p.isOp()) {
     			if (e.getMessage().contains(p.getName())) {
     				if (!getRoom(p).equals(getRoom(sender))) {
-    					p.sendMessage(ChatColor.BLUE + "[" + getRoom(p.getPlayer()) + "]" + ChatColor.WHITE + e.getMessage());
+    					p.sendMessage(ChatColor.BLUE + "[Von: " + ChatColor.GREEN + e.getPlayer().getName() + ChatColor.WHITE + " in " + ChatColor.RED + getRoom(e.getPlayer()) + ChatColor.BLUE + "]" + ChatColor.WHITE + e.getMessage());
     				}
     			}
     		}
