@@ -61,6 +61,7 @@ public final class Main extends JavaPlugin implements Listener {
 			    stat.executeUpdate("create table rooms (roomname, password, maxmembers);");
 			}
 			else {
+				Class.forName("org.sqlite.JDBC");
 				conn = DriverManager.getConnection("jdbc:sqlite:plugins/SimpleChatrooms/simplechatrooms.db");
 			}
 	    }
@@ -145,37 +146,42 @@ public final class Main extends JavaPlugin implements Listener {
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		
 		if (cmd.getName().equalsIgnoreCase("createroom")) {
-			if (sender instanceof Player) {
-				if (sender.hasPermission("simplechatrooms.create")) {
-					
-					if (args.length > 3) {
-						sender.sendMessage("Zu viele Argumente angegeben.");
-						return false;
-					}
-					else if (args.length < 3) {
-						return false;
-					}
-					
-					try {
-						createRoom(args[0], args[1], Integer.parseInt(args[2]));
-					}
-					catch (NumberFormatException nfx) {
-						sender.sendMessage("Fehlerhafte Eingabe.");
-						return false;
-					}
-					
-					sender.sendMessage("Raum mit dem Namen: " + ChatColor.GREEN + args[0] + ChatColor.WHITE + " und dem Passwort: " + ChatColor.GREEN + args[1] + ChatColor.WHITE + " hinzugefügt");
-					
-					return true;
-					
-				}
-				else {
+			String message = "";
+			if (sender.hasPermission("simplechatrooms.create")) {
+				
+				if (args.length > 3) {
+					sender.sendMessage("To much arguments given.");
 					return false;
 				}
+				
+				if (args.length == 2) {
+					try {
+						createRoom(args[0], null, Integer.parseInt(args[1]));
+						message = "Room with the name: " + ChatColor.GREEN + args[0] + ChatColor.WHITE + " and no password created.";
+					}
+					catch (NumberFormatException nfx) {
+						sender.sendMessage("Invalid input given.");
+						return false;
+					}		
+				}
+				else {	
+					try {
+						createRoom(args[0], args[1], Integer.parseInt(args[2]));
+						message = "Room with the name: " + ChatColor.GREEN + args[0] + ChatColor.WHITE + " and password: " + ChatColor.GREEN + args[1] + ChatColor.WHITE + " created.";
+					}
+					catch (NumberFormatException nfx) {
+						sender.sendMessage("Invalid input given.");
+						return false;
+					}
+				}
+				
+				sender.sendMessage(message);
+				
+				return true;
+				
 			}
 			else {
-				sender.sendMessage("Es können keine Chatrooms von der Konsole aus erstellt werden.");
-				return true;
+				return false;
 			}
 		}
 		
@@ -184,7 +190,7 @@ public final class Main extends JavaPlugin implements Listener {
 				return false;
 			}
 			saveRooms();
-			sender.sendMessage("Räume gespeichert!");
+			sender.sendMessage("Rooms saved.");
 			return true;
 		}
 		
@@ -201,9 +207,9 @@ public final class Main extends JavaPlugin implements Listener {
 				
 				if (subarray[0].equals(args[0])) {
 					rooms.remove(i);
-					sender.sendMessage("Raum " + ChatColor.RED + ((String) subarray[0]) + ChatColor.WHITE + " gelöscht.");
+					sender.sendMessage("Room " + ChatColor.RED + ((String) subarray[0]) + ChatColor.WHITE + " deleted.");
 					for (Player p : roommembers) {
-						p.sendMessage("Dein Raum wurde gelöscht!");
+						p.sendMessage("The room you where in was deleted!");
 					}
 					return true;
 				}
@@ -215,19 +221,19 @@ public final class Main extends JavaPlugin implements Listener {
 		if (cmd.getName().equalsIgnoreCase("joinroom")) {
 			if (sender instanceof Player) {
 				if (rooms.size() > 0) {
-					if (args.length == 2) {
-						if (getRoom((Player) sender) == "NONE") {
-							for (int i = 0; i < rooms.size(); i++) {
-								Object[] subarray = rooms.get(i);
-								String roomname = (String) subarray[0];
-								String password = (String) subarray[1];
-								int maxmembers = (int) subarray[3];
+					if (getRoom((Player) sender) == "NONE") {
+						for (int i = 0; i < rooms.size(); i++) {
+							Object[] subarray = rooms.get(i);
+							String roomname = (String) subarray[0];
+							String password = (String) subarray[1];
+							int maxmembers = (int) subarray[3];
+							if (args.length == 2 && password != null) {
 								if (args[0].equals(roomname) && args[1].equals(password)) {
 									@SuppressWarnings("unchecked")
 									ArrayList<Player> playerlist = (ArrayList<Player>) subarray[2];
 									
 									if (playerlist.size() == maxmembers && !sender.isOp()) {
-										sender.sendMessage("Raum ist voll");
+										sender.sendMessage("Room is full.");
 										return true;
 									}
 									
@@ -239,22 +245,41 @@ public final class Main extends JavaPlugin implements Listener {
 									subarray[2] = (Object) playerlist;
 									rooms.set(i, subarray);
 									
-									sender.sendMessage("Du bist dem Raum " + ChatColor.RED + roomname + ChatColor.WHITE + " beigetreten.");
+									sender.sendMessage("You've entered the room " + ChatColor.RED + roomname + ChatColor.WHITE);
 									
 									return true;
 								}
 							}
-							sender.sendMessage("Falsches Passwort oder Raum nicht gefunden.");
-							return true;
+							else if (args.length >= 1 && password == null) {
+								if (args[0].equals(roomname) && password == null) {
+									@SuppressWarnings("unchecked")
+									ArrayList<Player> playerlist = (ArrayList<Player>) subarray[2];
+									
+									if (playerlist.size() == maxmembers && !sender.isOp()) {
+										sender.sendMessage("Room is full.");
+										return true;
+									}
+									
+									for (Player p : playerlist) {
+										p.sendMessage("Player " + ChatColor.GREEN + sender.getName() + ChatColor.WHITE + " ist dem Raum beigetreten.");
+									}
+									playerlist.add((Player) sender);
+									
+									subarray[2] = (Object) playerlist;
+									rooms.set(i, subarray);
+									
+									sender.sendMessage("You've entered the room " + ChatColor.RED + roomname + ChatColor.WHITE);
+									
+									return true;
+								}
+							}
 						}
-						else {
-							sender.sendMessage("Du bist bereits im Raum " + ChatColor.RED + getRoom((Player) sender) + ChatColor.WHITE + ".");
-							return true;
-						}
+						sender.sendMessage("Wrong password or room not found.");
+						return true;
 					}
 					else {
-						sender.sendMessage("Not all args");
-						return false;
+						sender.sendMessage("You are already in room " + ChatColor.RED + getRoom((Player) sender) + ChatColor.WHITE + ".");
+						return true;
 					}
 				}
 			}
@@ -263,15 +288,21 @@ public final class Main extends JavaPlugin implements Listener {
 		if (cmd.getName().equalsIgnoreCase("showrooms")) {
 			if (rooms.size() > 0) {
 				for (Object[] subarray : rooms) {
+					String password = (String) subarray[1];
 					@SuppressWarnings("unchecked")
 					int membercount = ((ArrayList<Player>) subarray[2]).size();
 					int maxmembers = (int) subarray[3];
-					sender.sendMessage("Raumname: " + ChatColor.RED + subarray[0].toString() + ChatColor.WHITE + " (" + ChatColor.GREEN + membercount + ChatColor.WHITE + "/" + ChatColor.GREEN + maxmembers + ChatColor.WHITE + ")");
+					if (password != null) {
+						sender.sendMessage("Roomname: " + ChatColor.RED + subarray[0].toString() + ChatColor.WHITE + " (" + ChatColor.GREEN + membercount + ChatColor.WHITE + "/" + ChatColor.GREEN + maxmembers + ChatColor.WHITE + ")" + ChatColor.RED + " PASSWORD");
+					}
+					else {
+						sender.sendMessage("Roomname: " + ChatColor.RED + subarray[0].toString() + ChatColor.WHITE + " (" + ChatColor.GREEN + membercount + ChatColor.WHITE + "/" + ChatColor.GREEN + maxmembers + ChatColor.WHITE + ")" + ChatColor.GREEN + " NO PASSWORD");
+					}
 				}
 				return true;
 			}
 			else {
-				sender.sendMessage("Keine Räume gefunden");
+				sender.sendMessage("No rooms found.");
 				return true;
 			}
 		}
@@ -310,7 +341,7 @@ public final class Main extends JavaPlugin implements Listener {
 									rooms.set(i, subarray);
 									
 									for (Player p : playerlist) {
-										p.sendMessage("Player " + ChatColor.GREEN + target.getName() + ChatColor.WHITE + " wurde aus dem Raum bewegt.");
+										p.sendMessage("Player " + ChatColor.GREEN + target.getName() + ChatColor.WHITE + " was moved from the room.");
 									}
 									
 									check = true;
@@ -323,7 +354,7 @@ public final class Main extends JavaPlugin implements Listener {
 							if (((String) subarray[0]).equals(roomname)) {
 								
 								for (Player p : playerlist) {
-									p.sendMessage("Player " + ChatColor.GREEN + target.getName() + ChatColor.WHITE + " wurde in den Raum bewegt.");
+									p.sendMessage("Player " + ChatColor.GREEN + target.getName() + ChatColor.WHITE + " was moved into the room.");
 								}
 								playerlist.add(target);
 								
@@ -335,11 +366,11 @@ public final class Main extends JavaPlugin implements Listener {
 						
 						if (check && check2 || getRoom(target) == "NONE" && check2) {
 							target.sendMessage("Du wurdest in den Raum " + ChatColor.RED + roomname + ChatColor.WHITE + " bewegt.");
-							sender.sendMessage("Player " + ChatColor.GREEN + target.getName() + ChatColor.WHITE + " wurde in den Raum " + ChatColor.RED + roomname + ChatColor.WHITE + " bewegt.");
+							sender.sendMessage("Player " + ChatColor.GREEN + target.getName() + ChatColor.WHITE + " was moved into room " + ChatColor.RED + roomname + ChatColor.WHITE);
 							return true;
 						}
 						else {
-							sender.sendMessage("Bewegen fehlgeschlagen.");
+							sender.sendMessage("Move failed.");
 							return false;
 						}
 					}
@@ -349,7 +380,7 @@ public final class Main extends JavaPlugin implements Listener {
 		        }
 			}
 		    else {
-	        	sender.sendMessage("Spieler " + ChatColor.RED + args[0] + ChatColor.WHITE + " wurde nicht gefunden.");
+	        	sender.sendMessage("Player " + ChatColor.RED + args[0] + ChatColor.WHITE + " wasn't found (is he online?)");
 	        	return true;
 		    }
 		}
@@ -365,7 +396,7 @@ public final class Main extends JavaPlugin implements Listener {
 						roomname = args[0];
 					}
 					else {
-						sender.sendMessage("Du bist in keinem Raum.");
+						sender.sendMessage("You are in no room.");
 						return true;
 					}
 					
@@ -376,7 +407,7 @@ public final class Main extends JavaPlugin implements Listener {
 						@SuppressWarnings("unchecked")
 						ArrayList<Player> playerlist = (ArrayList<Player>) subarray[2];
 						sender.sendMessage(ChatColor.YELLOW + "---------------------------------------");
-						sender.sendMessage("Member im Raum " + ChatColor.RED + roomname + ChatColor.WHITE + " (" + ChatColor.GREEN + membercount + ChatColor.WHITE + "/" + ChatColor.GREEN + maxmembers + ChatColor.WHITE + ")");
+						sender.sendMessage("Member in room " + ChatColor.RED + roomname + ChatColor.WHITE + " (" + ChatColor.GREEN + membercount + ChatColor.WHITE + "/" + ChatColor.GREEN + maxmembers + ChatColor.WHITE + ")");
 						sender.sendMessage(ChatColor.YELLOW + "---------------------------------------");
 						for (Player p : playerlist) {
 							sender.sendMessage(ChatColor.GREEN + p.getName());
@@ -384,7 +415,7 @@ public final class Main extends JavaPlugin implements Listener {
 						return true;
 					}
 				}
-				sender.sendMessage("Raum " + ChatColor.RED + args[0] + ChatColor.WHITE + " wurde nicht gefunden.");
+				sender.sendMessage("Room " + ChatColor.RED + args[0] + ChatColor.WHITE + " wasn't found.");
 				return true;
 			}
 		}
@@ -404,7 +435,7 @@ public final class Main extends JavaPlugin implements Listener {
 							subarray[2] = (Object) playerlist;
 							rooms.set(i, subarray);
 							
-							sender.sendMessage("Du hast den Raum " + ChatColor.RED + ((String) subarray[0]) + ChatColor.WHITE + " verlassen.");
+							sender.sendMessage("You left the room " + ChatColor.RED + ((String) subarray[0]) + ChatColor.WHITE);
 							
 							return true;
 						}
@@ -431,13 +462,13 @@ public final class Main extends JavaPlugin implements Listener {
 								rooms.set(i, subarray);
 								
 								sender.sendMessage("Player " + ChatColor.GREEN + target.getName() + ChatColor.WHITE + " aus Raum " + ChatColor.RED + subarray[0].toString() + ChatColor.WHITE + " gekickt.");
-								target.sendMessage("Du wurdest aus dem Raum " + ChatColor.RED + subarray[0].toString() + ChatColor.WHITE + " gekickt");
+								target.sendMessage("You were kicked from the room " + ChatColor.RED + subarray[0].toString() + ChatColor.WHITE);
 								
 								return true;
 							}
 				        }
 				        else {
-				        	sender.sendMessage("Spieler " + ChatColor.RED + args[0] + ChatColor.WHITE + " wurde nicht gefunden.");
+				        	sender.sendMessage("Player " + ChatColor.RED + args[0] + ChatColor.WHITE + " wasn't found.");
 				        	return true;
 				        }
 					}
@@ -478,7 +509,7 @@ public final class Main extends JavaPlugin implements Listener {
     		if (p.isOp()) {
     			if (e.getMessage().contains(p.getName())) {
     				if (!getRoom(p).equals(getRoom(sender))) {
-    					p.sendMessage(ChatColor.BLUE + "[Von: " + ChatColor.GREEN + e.getPlayer().getName() + ChatColor.WHITE + " in " + ChatColor.RED + getRoom(e.getPlayer()) + ChatColor.BLUE + "]" + ChatColor.WHITE + e.getMessage());
+    					p.sendMessage(ChatColor.BLUE + "[From: " + ChatColor.GREEN + e.getPlayer().getName() + ChatColor.WHITE + " in " + ChatColor.RED + getRoom(e.getPlayer()) + ChatColor.BLUE + "]" + ChatColor.WHITE + e.getMessage());
     				}
     			}
     		}
