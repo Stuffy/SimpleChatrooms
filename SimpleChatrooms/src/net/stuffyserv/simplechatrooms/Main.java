@@ -164,7 +164,7 @@ public final class Main extends JavaPlugin implements Listener {
 						return false;
 					}		
 				}
-				else {	
+				else if (args.length == 3) {	
 					try {
 						createRoom(args[0], args[1], Integer.parseInt(args[2]));
 						message = "Room with the name: " + ChatColor.GREEN + args[0] + ChatColor.WHITE + " and password: " + ChatColor.GREEN + args[1] + ChatColor.WHITE + " created.";
@@ -173,6 +173,9 @@ public final class Main extends JavaPlugin implements Listener {
 						sender.sendMessage("Invalid input given.");
 						return false;
 					}
+				}
+				else {
+					return false;
 				}
 				
 				sender.sendMessage(message);
