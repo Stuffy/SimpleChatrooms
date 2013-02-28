@@ -223,6 +223,9 @@ public final class Main extends JavaPlugin implements Listener {
 		
 		if (cmd.getName().equalsIgnoreCase("joinroom")) {
 			if (sender instanceof Player) {
+				if (args.length < 1) {
+					return false;
+				}
 				if (rooms.size() > 0) {
 					if (getRoom((Player) sender) == "NONE") {
 						for (int i = 0; i < rooms.size(); i++) {
